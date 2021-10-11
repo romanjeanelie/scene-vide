@@ -1,0 +1,22 @@
+*,
+*:after,
+*:before {
+  box-sizing: border-box;
+}
+
+html {
+  @extend %cover;
+}
+
+body {
+  @extend %cover;
+  font-family: Poppins;
+  background: $white;
+  // overflow: hidden;
+}
+
+a {
+  color: inherit;
+  outline: none;
+  text-decoration: none;
+}
