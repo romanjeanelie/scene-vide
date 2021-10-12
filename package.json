@@ -11,7 +11,7 @@
     "lint": "npm run lint:js"
   },
   "dependencies": {
-    "core-js": "^3.3.5",
+    "core-js": "^3.18.2",
     "gsap": "file:gsap-bonus.tgz",
     "include-media": "^1.4.10",
     "nuxt": "^2.15.7"
