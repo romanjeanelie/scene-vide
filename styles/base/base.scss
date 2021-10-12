@@ -12,7 +12,8 @@ body {
   @extend %cover;
   font-family: Poppins;
   background: $white;
-  // overflow: hidden;
+  overflow: auto;
+  height: 13 * 100vh;
 }
 
 a {
