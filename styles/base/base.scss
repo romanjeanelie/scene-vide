@@ -5,15 +5,14 @@
 }
 
 html {
-  @extend %cover;
+  // @extend %cover;
 }
 
 body {
-  @extend %cover;
+  // @extend %cover;
   font-family: Poppins;
   background: $white;
-  overflow: auto;
-  height: 13 * 100vh;
+  // overflow: auto;
 }
 
 a {
