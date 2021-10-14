@@ -47,7 +47,7 @@ export default {
   build: {},
 
   server: {
-    // host: '192.168.0.14',
+    host: '192.168.0.14',
   },
 
   styleResources: {
