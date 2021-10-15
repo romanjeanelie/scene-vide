@@ -1,8 +1,17 @@
 <template>
   <div class="essai4">
     <div class="info">Essai4</div>
+    <div ref="imgWrapper" class="img__wrapper">
+      <img
+        v-for="n in 10"
+        ref="image"
+        :key="n"
+        :src="`https://picsum.photos/id/${n}37/850/1200`"
+        alt=""
+      />
+    </div>
     <div ref="wrapper" class="wrapper">
-      <article v-for="n in 7" ref="article" :key="n" class="article">
+      <article v-for="n in 10" ref="article" :key="n" class="article">
         <div ref="titleWrapper" class="title__wrapper">
           <h2>TITRE {{ n }}</h2>
         </div>
@@ -20,70 +29,119 @@ export default {
   data() {
     return {
       pageWidth: 0,
+      scrollValue: 0,
+      titleWidth: 0,
+      articleWidth: 0,
+      titlesOffsetLeft: 5,
+      borderTitleDistance: 0,
+      offsetTitle: 0,
+      nbTitlesOut: 0,
+      wrapperPosition: 0,
     }
   },
   mounted() {
     this.pageWidth = window.innerWidth
-    this.initTitle()
-    this.scrollAnim()
+    // Compute onResize
+    this.boundingTitle()
+    this.boundingArticle()
+    this.boundingWrapper()
+    // Compute onResize
+    this.onScroll()
+    this.positionTitle()
   },
   methods: {
-    scrollAnim() {
-      const ribbonWidth = Math.ceil(
+    boundingTitle() {
+      this.titleWidth = Math.ceil(
         this.$refs.titleWrapper[0].getBoundingClientRect().width
       )
-      const titlesOffsetIn = 3
-      // Change vertical scroll to horizontal
-      window.addEventListener('scroll', () => {
-        this.$refs.wrapper.scroll(window.scrollY, 0)
-        this.$refs.article.forEach((articleEl, i) => {
-          const articlePosition = articleEl.getBoundingClientRect()
+      this.borderTitleDistance =
+        this.pageWidth - this.titleWidth * this.titlesOffsetLeft
+      this.nbTitlesOut = Math.floor(
+        this.$refs.article.length - this.titlesOffsetLeft
+      )
+    },
+    boundingArticle() {
+      this.articleWidth = Math.ceil(
+        this.$refs.article[0].getBoundingClientRect().width
+      )
+    },
+    boundingWrapper() {
+      this.wrapperPosition = this.$refs.wrapper.getBoundingClientRect()
+    },
+    onScroll() {
+      this.scrollValue = 0
 
-          const distArticleTitle =
-            articlePosition.x -
-            this.$refs.titleWrapper[i].getBoundingClientRect().x
-          // Fix title at left
-          if (articlePosition.x < 0) {
+      window.addEventListener('scroll', () => {
+        // Change vertical scroll to horizontal
+        this.$refs.wrapper.scroll(window.scrollY, 0)
+        this.$refs.imgWrapper.scroll(window.scrollY, 0)
+
+        this.getScroll()
+        this.getOffsetTitle()
+      })
+    },
+    getScroll() {
+      // Get scroll normalized
+      this.scrollValue =
+        Math.floor(
+          (this.$refs.wrapper.scrollLeft /
+            (this.$refs.wrapper.scrollWidth - this.$refs.wrapper.clientWidth)) *
+            1000
+        ) / 1000
+    },
+    getOffsetTitle() {
+      // Rapport scroll / article width
+      const ratioArticleVisible =
+        this.$refs.wrapper.scrollLeft / this.articleWidth
+
+      // Compute offset title
+      this.offsetTitle = ratioArticleVisible * this.titleWidth
+    },
+    initPositionTitle(articleEl, i) {
+      // Specific varaibles
+      const articlePosition = articleEl.getBoundingClientRect()
+      const rightPositionTitle =
+        (this.$refs.article.length - i - this.nbTitlesOut) * this.titleWidth
+
+      if (articlePosition.x > this.borderTitleDistance) {
+        // Article outside RIGHT
+        this.$refs.titleWrapper[i].style.position = 'fixed'
+        this.$refs.titleWrapper[i].style.right = `${rightPositionTitle}px`
+      }
+    },
+    positionTitle() {
+      this.$refs.article.forEach((articleEl, i) => {
+        this.initPositionTitle(articleEl, i)
+
+        // Position fix titles
+        const rightPositionTitle =
+          (this.$refs.article.length - i - this.nbTitlesOut) * this.titleWidth
+
+        window.addEventListener('scroll', () => {
+          const articlePosition = articleEl.getBoundingClientRect()
+          if (articlePosition.x < this.wrapperPosition.x) {
+            // Article outside LEFT
             this.$refs.titleWrapper[i].style.position = 'fixed'
-            this.$refs.titleWrapper[i].style.left = 0
-          } else if (
-            articlePosition.x <
-            this.pageWidth - ribbonWidth * titlesOffsetIn
-          ) {
-            // Dans la page
+            this.$refs.titleWrapper[
+              i
+            ].style.left = `${this.wrapperPosition.x}px`
+          } else if (articlePosition.x < this.borderTitleDistance) {
+            // Article inside
+            this.$refs.titleWrapper[i].style.transform = `translateX(0px)`
             this.$refs.titleWrapper[i].style.position = 'absolute'
             this.$refs.titleWrapper[i].style.left = 'unset'
             this.$refs.titleWrapper[i].style.right = 'unset'
-          } else if (
-            articlePosition.x >
-            this.pageWidth - ribbonWidth * titlesOffsetIn
-          ) {
-            // Hors de la pge
-            console.log('outside')
-            this.$refs.titleWrapper[i].style.transform = `translateX(${
-              distArticleTitle * 0.2
-            }px)`
+          } else if (articlePosition.x > this.borderTitleDistance) {
+            // Article outside RIGHT
+            this.$refs.titleWrapper[i].style.position = 'fixed'
+            this.$refs.titleWrapper[i].style.right = `${
+              0 + rightPositionTitle
+            }px`
+            this.$refs.titleWrapper[
+              i
+            ].style.transform = `translateX(-${this.offsetTitle}px)`
           }
         })
-      })
-    },
-
-    initTitle() {
-      this.$refs.article.forEach((articleEl, i) => {
-        const article = {}
-        const titlesOffsetIn = 4
-        article.position = articleEl.getBoundingClientRect()
-        article.length = this.$refs.article.length
-        // Check when article enter
-        if (article.position.x < this.pageWidth) {
-          // Dans la page
-        } else {
-          // Hors de la pge
-          this.$refs.titleWrapper[i].style.position = 'fixed'
-          this.$refs.titleWrapper[i].style.right = `${
-            0 + (article.length - i - titlesOffsetIn) * 100
-          }px`
-        }
       })
     },
   },
@@ -100,35 +158,49 @@ export default {
     padding: 16px;
     font-size: 16px;
     z-index: 10;
-  }
-  h2 {
-    font-size: 50px;
+    display: none;
   }
 
+  .img__wrapper {
+    position: fixed;
+    display: flex;
+    left: 0;
+    width: 40vw;
+    height: 100vh;
+    overflow: hidden;
+    img {
+      height: 100%;
+      width: 40vw;
+    }
+  }
   .wrapper {
     position: fixed;
     display: flex;
-    width: 100vw;
+    margin-left: 40vw;
+    width: calc(100vw - 40vw);
     height: 100vh;
     overflow: hidden;
+    box-shadow: -16px 1px 28px 2px rgba(0, 0, 0, 0.36);
   }
   .title__wrapper {
-    width: 100px;
+    width: 3vw;
     height: 100%;
-    background: #f4f4f4;
+    background: #fbfaf5;
     position: absolute;
-    border: 1px solid blue;
+    border-left: 1px solid black;
     h2 {
+      font-size: 25px;
       transform: rotate(90deg) translate(0, -100%);
       width: 100vh;
       transform-origin: top left;
+      margin-left: 16px;
+      margin-top: 8px;
     }
   }
 
   .article__content {
     height: 100%;
-    width: 60vw;
-    border: 1px solid salmon;
+    width: 40vw;
     display: flex;
     justify-content: center;
     align-items: center;
