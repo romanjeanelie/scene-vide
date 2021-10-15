@@ -75,6 +75,9 @@ export default {
         // Change vertical scroll to horizontal
         this.$refs.wrapper.scroll(window.scrollY, 0)
         this.$refs.imgWrapper.scroll(window.scrollY, 0)
+        this.$refs.image.forEach((img) => {
+          img.style.transform = `scale(${0.5 + this.scrollValue})`
+        })
 
         this.getScroll()
         this.getOffsetTitle()
@@ -148,8 +151,9 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 /* https://codepen.io/GreenSock/pen/9e7bf431223f98516c0431cfdefb6e3f */
+
 .essai4 {
   .info {
     position: fixed;
