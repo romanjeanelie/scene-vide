@@ -1,24 +1,16 @@
 <template>
   <div class="home">
     <cover ref="cover" />
-    <div
-      ref="scrollProgress"
-      class="scroll__progress"
-      :style="progressStyle"
-    ></div>
+    <div ref="scrollProgress" class="scroll__progress" :style="progressStyle"></div>
     <div ref="border" class="home__border" :style="borderStyle">
       <div class="border__wrapper">
         <h3 class="title">La scene est vide</h3>
         <h3 class="numero">numéro 1 - vide</h3>
       </div>
+      <div class="line"></div>
     </div>
     <div ref="imgWrapper" class="home__img__wrapper">
-      <div
-        v-for="n in 10"
-        ref="imgWithOverlay"
-        :key="n"
-        class="img-with-overlay"
-      >
+      <div v-for="n in 10" ref="imgWithOverlay" :key="n" class="img-with-overlay">
         <div ref="overlay" class="overlay" :style="styleOverlay(n)"></div>
         <div class="img__container">
           <img
@@ -30,13 +22,18 @@
         </div>
       </div>
     </div>
+
     <div ref="container" class="articles__container">
       <div ref="wrapper" class="articles__wrapper">
+        <div ref="hideArticle" class="hide__article"></div>
         <article v-for="n in 10" ref="article" :key="n" class="article">
           <div ref="titleWrapper" class="title__wrapper">
-            <h2>TITRE {{ n }}</h2>
+            <div ref="titleBg" class="title__bg"></div>
+            <div ref="titleBorder" class="title__border"></div>
+            <h2 ref="title">Le théâtre polonais</h2>
           </div>
-          <Article ref="articleContent" class="article__content" />
+
+          <Article ref="articleContent" class="article__content" :index-article="n" />
         </article>
       </div>
     </div>
@@ -51,6 +48,7 @@ import debounce from 'lodash/debounce'
 import Generique from '~/components/Home/Generique.vue'
 import Cover from '~/components/Home/Cover.vue'
 import Article from '~/components/Home/Article.vue'
+import emitter from '~/assets/js/EventEmitter'
 
 export default {
   components: { Generique, Cover, Article },
@@ -91,26 +89,33 @@ export default {
       // if (this.indexArticleVisible % 2 === 0) {
       //   style.background = ' #CCAB00'
       // } else {
-      //   style.background = '#C61900'
+      //   style.background = ' #C61900'
       // }
-      style.background = ' #CCAB00'
+      style.background = ' #3D3D3D'
 
       return style
     },
     borderStyle() {
       const style = {}
-      if (this.indexArticleVisible % 2 === 0) {
-        style.borderRight = '2px solid  #FBFAF5'
-        style.color = ' #FBFAF5'
-      } else {
-        style.borderRight = '2px solid  #C61900'
-        style.color = '#C61900'
-      }
+      // if (this.indexArticleVisible % 2 === 0) {
+      // style.color = ' #FBFAF5'
+      //   style.borderRight = '2px solid  #FBFAF5'
+      // } else {
+      //   style.borderRight = '2px solid  #C61900'
+      //   style.color = '#C61900'
+      // }
+      style.color = ' #FBFAF5'
+      // style.color = '#C61900'
       return style
     },
   },
   mounted() {
+    this.$nextTick(() => {
+      emitter.emit('PAGE:MOUNTED')
+    })
     this.pageWidth = document.body.scrollWidth
+
+    this.reset()
 
     // Compute onResize
     this.computeBounds()
@@ -118,7 +123,9 @@ export default {
     this.getScrollSpeed()
 
     this.initPositionTitle()
-    this.update()
+    this.initPositionHideArticle()
+    // this.update()
+
     this.onScroll()
   },
 
@@ -127,16 +134,12 @@ export default {
       // TITLE
       this.titleWidth = this.$refs.titleWrapper[0].getBoundingClientRect().width
 
-      this.borderTitleDistance =
-        this.pageWidth - this.titleWidth * (this.titlesOffsetLeft - 1)
+      this.borderTitleDistance = this.pageWidth - this.titleWidth * (this.titlesOffsetLeft - 1)
 
       // Compute titles outside of the page
-      this.nbTitlesOut = Math.floor(
-        this.$refs.article.length - this.titlesOffsetLeft
-      )
+      this.nbTitlesOut = Math.floor(this.$refs.article.length - this.titlesOffsetLeft)
 
-      this.ratioTitleVisible =
-        (this.titleWidth * this.titlesOffsetLeft) / this.pageWidth
+      this.ratioTitleVisible = (this.titleWidth * this.titlesOffsetLeft) / this.pageWidth
 
       // ARTICLE
       this.articleWidth = this.$refs.article[0].getBoundingClientRect().width
@@ -149,9 +152,7 @@ export default {
 
       this.wrapperWidthWithoutTitle =
         // Compute with one more title width
-        this.borderTitleDistance -
-        this.titleWidth -
-        this.imageWapperBounds.width
+        this.borderTitleDistance - this.titleWidth - this.imageWapperBounds.width
 
       this.articleInWrapper = this.wrapperWidthWithoutTitle / this.articleWidth
 
@@ -175,25 +176,23 @@ export default {
       })
     },
     update() {
-      this.$gsap.ticker.add(() => {
-        // Update scroll
-        this.$refs.wrapper.scroll(this.toScroll.value, 0)
-        this.$refs.imgWrapper.scroll(this.toScroll.value, 0)
+      // Update scroll
+      this.$refs.wrapper.scroll(this.toScroll.value, 0)
+      this.$refs.imgWrapper.scroll(this.toScroll.value, 0)
 
-        this.computePositions()
+      this.computePositions()
 
-        this.updatePositionTitle()
-      })
+      this.updatePositionTitle()
     },
     onScroll() {
-      window.addEventListener(
-        'wheel',
+      emitter.on(
+        'CONTROLS:DOWN',
         debounce(
-          (e) => {
+          (distance) => {
             /**
              * Scroll Down
              **/
-            if (Math.sign(e.deltaY) > 0) {
+            if (Math.sign(distance) > 0) {
               if (this.indexArticleVisible === 10) return
               if (this.indexArticleVisible === -1) {
                 this.startSlideIn()
@@ -206,19 +205,23 @@ export default {
 
               // Anim ArticleContent
               if (this.indexArticleVisible >= 1) {
-                this.$refs.articleContent[
-                  this.indexArticleVisible - 1
-                ].animOut()
+                this.$refs.articleContent[this.indexArticleVisible - 1].animOut()
               }
               if (this.indexArticleVisible < 10) {
                 this.$refs.articleContent[this.indexArticleVisible].animIn()
+                this.animTitleOut()
+              }
+
+              // Anim hideArticle
+              if (this.indexArticleVisible === 9) {
+                this.hideArticleAnimOut()
               }
             }
 
             /**
              * Scroll Up
              **/
-            if (Math.sign(e.deltaY) < 0) {
+            if (Math.sign(distance) < 0) {
               if (this.indexArticleVisible === -1) return
 
               if (this.indexArticleVisible === 0) {
@@ -232,12 +235,16 @@ export default {
 
               // Anim ArticleContent
               if (this.indexArticleVisible < 9) {
-                this.$refs.articleContent[
-                  this.indexArticleVisible + 1
-                ].animOut()
+                this.$refs.articleContent[this.indexArticleVisible + 1].animOut()
+                this.animTitleIn()
               }
               if (this.indexArticleVisible >= 0) {
                 this.$refs.articleContent[this.indexArticleVisible].animIn()
+              }
+
+              // Anim hideArticle
+              if (this.indexArticleVisible === 8) {
+                this.hideArticleAnimIn()
               }
             }
 
@@ -255,8 +262,6 @@ export default {
             this.$refs.scrollProgress.style.transform = `scaleX(${
               (this.indexArticleVisible + 1) / this.$refs.article.length
             })`
-
-            // Update scroll progress
           },
           this.debounceWait,
           { leading: true, trailing: false }
@@ -265,11 +270,9 @@ export default {
     },
 
     computePositions() {
-      this.ratioArticleVisible =
-        this.$refs.wrapper.scrollLeft / this.articleWidth
+      this.ratioArticleVisible = this.$refs.wrapper.scrollLeft / this.articleWidth
 
-      this.ratioSecondArticleVisible =
-        this.articleInWrapper - (1 - this.ratioArticleVisible)
+      this.ratioSecondArticleVisible = this.articleInWrapper - (1 - this.ratioArticleVisible)
 
       this.offsetTitle = this.ratioArticleVisible * this.titleWidth
     },
@@ -277,8 +280,7 @@ export default {
       this.$refs.article.forEach((articleEl, i) => {
         // Position fix titles
         const rightPositionTitle =
-          (this.$refs.titleWrapper.length - i - this.nbTitlesOut) *
-          this.titleWidth
+          (this.$refs.titleWrapper.length - i - this.nbTitlesOut) * this.titleWidth
 
         if (i > this.ratioSecondArticleVisible + 1) {
           // Article outside RIGHT
@@ -287,13 +289,18 @@ export default {
         }
       })
     },
+    initPositionHideArticle() {
+      const offset = this.borderTitleDistance - this.imageWapperBounds.width
+      console.log(offset)
+      this.$refs.hideArticle.style.left = `${offset}px`
+      // this.$refs.hideArticle.style.left = `50px`
+    },
     updatePositionTitle() {
       // Position titles onScroll
       this.$refs.article.forEach((articleEl, i) => {
         // Position fix titles
         const rightPositionTitle =
-          (this.$refs.titleWrapper.length - i - this.nbTitlesOut) *
-          this.titleWidth
+          (this.$refs.titleWrapper.length - i - this.nbTitlesOut) * this.titleWidth
 
         if (this.ratioArticleVisible > i) {
           // Article outside LEFT
@@ -303,9 +310,7 @@ export default {
           // Article outside RIGHT
           this.$refs.article[i].style.position = 'unset'
           this.$refs.titleWrapper[i].style.right = `${rightPositionTitle}px`
-          this.$refs.titleWrapper[
-            i
-          ].style.transform = `translateX(-${this.offsetTitle}px)`
+          this.$refs.titleWrapper[i].style.transform = `translateX(-${this.offsetTitle}px)`
         } else {
           // Article inside
           this.$refs.article[i].style.position = 'relative'
@@ -323,11 +328,12 @@ export default {
       const style = {}
 
       if (n === this.indexArticleVisible + 1) {
-        if (n % 2 === 0) {
-          style.background = '#FFD500'
-        } else {
-          style.background = '#C61900'
-        }
+        // if (n % 2 === 0) {
+        //   style.background = '#FFD500'
+        // } else {
+        //   style.background = '#C61900'
+        style.background = '#FFD500'
+        // }
       } else {
         style.background = 'rgba(0,0,0,0.7)'
       }
@@ -345,11 +351,104 @@ export default {
     },
 
     /**
+     * Reset
+     */
+    reset() {
+      this.titleSplitted = new this.$SplitText(this.$refs.title, {
+        type: 'chars',
+        charsClass: 'chars',
+      })
+    },
+    /**
      * Animations
+     */
+
+    /**
+     * Title
+     */
+    animTitleOut() {
+      const index = this.indexArticleVisible
+      const titleChars = this.$refs.title[index].querySelectorAll('.chars')
+
+      this.resetAnimTitle(
+        this.$refs.titleBg[index],
+        this.$refs.title[index],
+        titleChars,
+        this.$refs.titleBorder[index]
+      )
+
+      // Background title
+      this.$gsap.to(this.$refs.titleBg[index], {
+        opacity: 0,
+        duration: 1,
+      })
+
+      // Title
+      this.$gsap.to(this.$refs.title[index], {
+        y: '500%',
+        duration: 1,
+      })
+      this.$gsap.to(titleChars, {
+        opacity: 0,
+        stagger: -0.02,
+        duration: 0.5,
+      })
+
+      // Border Title
+      this.$gsap.to(this.$refs.titleBorder[index], {
+        scaleY: 0,
+        opacity: 0,
+        duration: 1,
+        ease: 'power1.out',
+      })
+    },
+    animTitleIn() {
+      const index = this.indexArticleVisible + 1
+      const titleChars = this.$refs.title[index].querySelectorAll('.chars')
+
+      this.resetAnimTitle(
+        this.$refs.titleBg[index],
+        this.$refs.title[index],
+        titleChars,
+        this.$refs.titleBorder[index]
+      )
+
+      // Background title
+      this.$gsap.to(this.$refs.titleBg[index], {
+        opacity: 1,
+        duration: 1,
+      })
+
+      // Title
+      this.$gsap.to(this.$refs.title[index], {
+        y: 0,
+        opacity: 1,
+        duration: 1,
+      })
+      this.$gsap.to(titleChars, {
+        opacity: 1,
+        stagger: -0.02,
+        duration: 0.5,
+      })
+
+      // Border Title
+      this.$gsap.to(this.$refs.titleBorder[index], {
+        scaleY: 1,
+        opacity: 0.4,
+        duration: 1,
+      })
+    },
+
+    resetAnimTitle(titleBg, title, titleChars, titleBorder) {
+      this.$gsap.killTweensOf([titleBg, title, titleChars, titleBorder])
+    },
+
+    /**
+     * Slider
      */
     // Anim In
     startSlideIn() {
-      this.resetAnim()
+      this.resetAnimSlider()
       this.$gsap.to(this.$refs.cover.$el, {
         x: '-20%',
         duration: 1.5,
@@ -369,7 +468,7 @@ export default {
     },
 
     startSlideOut() {
-      this.resetAnim()
+      this.resetAnimSlider()
       this.$gsap.to(this.$refs.cover.$el, {
         x: '0',
         duration: 1,
@@ -390,7 +489,7 @@ export default {
 
     // Anim OUT
     endSlideOut() {
-      this.resetAnim()
+      this.resetAnimSlider()
       this.$gsap.set(this.$refs.cover.$el, {
         x: '-100%',
       })
@@ -408,7 +507,7 @@ export default {
       })
     },
     endSlideIn() {
-      this.resetAnim()
+      this.resetAnimSlider()
       this.$gsap.to(this.$refs.container, {
         x: 0,
         duration: 1,
@@ -423,13 +522,36 @@ export default {
       })
     },
 
-    resetAnim() {
+    resetAnimSlider() {
       this.$gsap.killTweensOf([
         this.$refs.cover.$el,
         this.$refs.container,
         this.$refs.imgWrapper,
         this.$refs.border,
       ])
+    },
+    /**
+     * Hide Article
+     */
+    // Anim In
+    hideArticleAnimIn() {
+      this.resetAnimHideArticle()
+      this.$gsap.to(this.$refs.hideArticle, {
+        x: 0,
+        duration: 1,
+      })
+    },
+
+    hideArticleAnimOut() {
+      this.resetAnimHideArticle()
+      this.$gsap.to(this.$refs.hideArticle, {
+        x: '60%',
+        duration: 2,
+      })
+    },
+
+    resetAnimHideArticle() {
+      this.$gsap.killTweensOf([this.$refs.hideArticle])
     },
   },
 }
@@ -439,6 +561,9 @@ export default {
 .home {
   $image-width: 40vw;
 
+  /**
+  * Scroll Progress
+  */
   .scroll__progress {
     z-index: 3;
     position: fixed;
@@ -452,6 +577,9 @@ export default {
     transition: transform 1s, background 1s;
   }
 
+  /**
+  * Border
+  */
   .home__border {
     z-index: 2;
     position: fixed;
@@ -459,19 +587,27 @@ export default {
     left: 0;
     width: vw(45);
     height: 100vh;
-
+    mix-blend-mode: difference;
     display: flex;
-    transition: color 800ms, border-right 800ms;
+    transition: color 800ms;
     transition-delay: 200ms;
 
     // Init
     transform: translateX(-100%);
+
+    .line {
+      height: 100%;
+      width: 1px;
+      background: $white;
+      position: absolute;
+      left: vw(40);
+    }
     .border__wrapper {
       width: vw(200);
       position: absolute;
       bottom: vw(10);
       display: flex;
-      align-items: end;
+      align-items: flex-end;
       transform-origin: left bottom;
       transform: rotate(-90deg) translate(0, 150%);
       .title {
@@ -487,6 +623,9 @@ export default {
     }
   }
 
+  /**
+  * Image
+  */
   .home__img__wrapper {
     z-index: 1;
     position: fixed;
@@ -530,6 +669,10 @@ export default {
     // Init
     transform: translateX(300%);
   }
+
+  /**
+  * Article
+  */
   .articles__container {
     z-index: 1;
     position: fixed;
@@ -553,43 +696,71 @@ export default {
       overflow: hidden;
     }
 
+    .hide__article {
+      z-index: 1;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: $white;
+    }
+
     .article {
       position: relative;
 
       // Remove border first title
       &:first-child {
         .title__wrapper {
+          .title__border {
+            display: none;
+          }
           border-left: none;
         }
       }
     }
+
+    /**
+    * Title
+    */
     .title__wrapper {
       z-index: 1;
       position: absolute;
       width: 3vw;
       height: 100%;
-      background: $white;
-      border-left: 1px solid black;
+
+      /* border-left: 1px solid black; */
+      .title__bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background: $white;
+      }
+      .title__border {
+        height: 100%;
+        width: 2px;
+        background: #707070;
+        opacity: 0.4;
+        position: absolute;
+        top: 0;
+        left: 1px;
+        z-index: 2;
+        transform-origin: center bottom;
+      }
       h2 {
-        font-size: 25px;
-        transform: rotate(90deg) translate(0, -100%);
         width: 100vh;
-        transform-origin: top left;
         margin-left: 16px;
         margin-top: 8px;
+        transform-origin: top left;
+        transform: rotate(90deg) translate(0, -100%);
+
+        font-size: vw(16);
+        text-transform: uppercase;
+
+        overflow: hidden;
       }
-    }
-
-    .article__content {
-      /* z-index: 1;
-      height: 100%;
-      width: 40vw;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #fbfaf5; */
-
-      /* scroll-snap-align: start; */
     }
   }
 }

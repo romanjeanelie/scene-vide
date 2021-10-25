@@ -28,6 +28,10 @@ export default {
 
   // Gsap
   gsap: {
+    clubPlugins: {
+      splitText: true,
+      morphSVG: true,
+    },
     extraPlugins: {
       scrollTrigger: true,
     },

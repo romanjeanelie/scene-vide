@@ -96,7 +96,7 @@ export default {}
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: start;
+      align-items: flex-start;
       .title__wrapper {
         display: flex;
         flex-direction: column;
@@ -118,7 +118,7 @@ export default {}
     .right__bottom {
       flex: 1;
       display: flex;
-      align-items: end;
+      align-items: flex-end;
       justify-content: space-between;
       padding-bottom: vw(50);
       .names {
