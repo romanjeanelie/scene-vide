@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <cover ref="cover" />
-    <div ref="scrollProgress" class="scroll__progress" :style="progressStyle"></div>
+    <div ref="scrollProgress" class="scroll__progress"></div>
     <div ref="border" class="home__border" :style="borderStyle">
       <div class="border__wrapper">
         <h3 class="title">La scene est vide</h3>
@@ -43,12 +43,13 @@
 </template>
 
 <script>
-// import debounce from '~~/utils/debounce'
+import { mapState, mapGetters } from 'vuex'
+
 import debounce from 'lodash/debounce'
 import Generique from '~/components/Home/Generique.vue'
 import Cover from '~/components/Home/Cover.vue'
 import Article from '~/components/Home/Article.vue'
-import emitter from '~/assets/js/EventEmitter'
+import emitter from '~/utils/EventEmitter'
 
 export default {
   components: { Generique, Cover, Article },
@@ -84,28 +85,12 @@ export default {
     }
   },
   computed: {
-    progressStyle() {
-      const style = {}
-      // if (this.indexArticleVisible % 2 === 0) {
-      //   style.background = ' #CCAB00'
-      // } else {
-      //   style.background = ' #C61900'
-      // }
-      style.background = ' #3D3D3D'
-
-      return style
-    },
+    ...mapGetters(['isMobile', 'isTablet', 'isTouch']),
+    ...mapState(['reducedMotion']),
     borderStyle() {
       const style = {}
-      // if (this.indexArticleVisible % 2 === 0) {
-      // style.color = ' #FBFAF5'
-      //   style.borderRight = '2px solid  #FBFAF5'
-      // } else {
-      //   style.borderRight = '2px solid  #C61900'
-      //   style.color = '#C61900'
-      // }
+
       style.color = ' #FBFAF5'
-      // style.color = '#C61900'
       return style
     },
   },
@@ -120,11 +105,8 @@ export default {
     // Compute onResize
     this.computeBounds()
 
-    this.getScrollSpeed()
-
     this.initPositionTitle()
     this.initPositionHideArticle()
-    // this.update()
 
     this.onScroll()
   },
@@ -167,14 +149,7 @@ export default {
 
       articleContent.style.boxShadow = ' 16px 1px 28px 2px rgba(0, 0, 0, 0.36)'
     },
-    getScrollSpeed() {
-      window.addEventListener('wheel', (e) => {
-        if (e.deltaY > 150) {
-          console.log('fast')
-          // this.debounceWait = 0
-        }
-      })
-    },
+
     update() {
       // Update scroll
       this.$refs.wrapper.scroll(this.toScroll.value, 0)
@@ -291,9 +266,7 @@ export default {
     },
     initPositionHideArticle() {
       const offset = this.borderTitleDistance - this.imageWapperBounds.width
-      console.log(offset)
       this.$refs.hideArticle.style.left = `${offset}px`
-      // this.$refs.hideArticle.style.left = `50px`
     },
     updatePositionTitle() {
       // Position titles onScroll
@@ -328,10 +301,6 @@ export default {
       const style = {}
 
       if (n === this.indexArticleVisible + 1) {
-        // if (n % 2 === 0) {
-        //   style.background = '#FFD500'
-        // } else {
-        //   style.background = '#C61900'
         style.background = '#FFD500'
         // }
       } else {
@@ -386,13 +355,17 @@ export default {
       // Title
       this.$gsap.to(this.$refs.title[index], {
         y: '500%',
+        opacity: this.reducedMotion ? 0 : 1,
         duration: 1,
       })
-      this.$gsap.to(titleChars, {
-        opacity: 0,
-        stagger: -0.02,
-        duration: 0.5,
-      })
+
+      if (!this.reducedMotion) {
+        this.$gsap.to(titleChars, {
+          opacity: 0,
+          stagger: -0.02,
+          duration: 0.5,
+        })
+      }
 
       // Border Title
       this.$gsap.to(this.$refs.titleBorder[index], {
@@ -425,11 +398,14 @@ export default {
         opacity: 1,
         duration: 1,
       })
-      this.$gsap.to(titleChars, {
-        opacity: 1,
-        stagger: -0.02,
-        duration: 0.5,
-      })
+
+      if (!this.reducedMotion) {
+        this.$gsap.to(titleChars, {
+          opacity: 1,
+          stagger: -0.02,
+          duration: 0.5,
+        })
+      }
 
       // Border Title
       this.$gsap.to(this.$refs.titleBorder[index], {
@@ -448,10 +424,14 @@ export default {
      */
     // Anim In
     startSlideIn() {
+      const duration1 = this.reducedMotion ? 1 : 1.5
+      const duration2 = this.reducedMotion ? 1 : 1.2
+
       this.resetAnimSlider()
       this.$gsap.to(this.$refs.cover.$el, {
         x: '-20%',
-        duration: 1.5,
+        // x: -100,
+        duration: duration1,
       })
       this.$gsap.to(this.$refs.container, {
         x: 0,
@@ -459,11 +439,11 @@ export default {
       })
       this.$gsap.to(this.$refs.imgWrapper, {
         x: 0,
-        duration: 1.2,
+        duration: duration2,
       })
       this.$gsap.to(this.$refs.border, {
         x: 0,
-        duration: 1.2,
+        duration: duration2,
       })
     },
 
@@ -543,10 +523,12 @@ export default {
     },
 
     hideArticleAnimOut() {
+      const duration1 = this.reducedMotion ? 1 : 2
+
       this.resetAnimHideArticle()
       this.$gsap.to(this.$refs.hideArticle, {
         x: '60%',
-        duration: 2,
+        duration: duration1,
       })
     },
 
@@ -571,7 +553,7 @@ export default {
     left: 0;
     height: $sizeProgress;
     width: 100%;
-    /* background: $yellow; */
+    background: lighten($yellow, 5%);
     transform-origin: center left;
     transform: scaleX(0);
     transition: transform 1s, background 1s;
@@ -642,6 +624,7 @@ export default {
       position: relative;
     }
     .overlay {
+      /* display: none; */
       z-index: 4;
       position: absolute;
       top: 0;
@@ -681,7 +664,7 @@ export default {
     height: 100vh;
     width: calc(100vw - $image-width);
     overflow: hidden;
-    box-shadow: -16px 0px 20px 2px rgba(0, 0, 0, 0.1);
+    box-shadow: -16px 0px 15px 2px rgba(0, 0, 0, 0.2);
 
     // Init
     transform: translateX(97%);

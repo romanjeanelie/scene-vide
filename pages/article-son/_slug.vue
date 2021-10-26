@@ -47,7 +47,7 @@ import close from '~/components/common/close.vue'
 import navigation from '~/components/common/navigation.vue'
 import Share from '~/components/common/share.vue'
 
-import emitter from '~/assets/js/EventEmitter'
+import emitter from '~/utils/EventEmitter'
 
 export default {
   components: { navigation, close, Share },

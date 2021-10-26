@@ -1,4 +1,5 @@
-import emitter from '~/assets/js/EventEmitter'
+import emitter from '~/utils/EventEmitter'
+
 export default class Controls {
   constructor() {
     this.x = {
@@ -17,32 +18,18 @@ export default class Controls {
   }
 
   init() {
-    console.log('init controls')
     document.body.style.overflow = 'hidden'
     this.wheel()
-    this.drag()
+    // this.drag()
+    this.keys()
   }
 
   destroy() {
-    console.log('destroy controls')
     document.body.style.overflow = 'unset'
     emitter.removeAllListeners('CONTROLS:DOWN')
-    // window.removeEventListener('wheel', (e) => {
-    //   console.log('wheel listener')
-    //   const distance = e.deltaY
-    //   emitter.emit('CONTROLS:DOWN', distance)
-    // })
-    // window.removeEventListener('mousedown')
-    // window.removeEventListener('mousemove')
-    // window.removeEventListener('mouseup')
-
-    // window.removeEventListener('touchstart')
-    // window.removeEventListener('touchmove')
-    // window.removeEventListener('touchend')
   }
 
   wheel() {
-    console.log('wheel init')
     window.addEventListener('wheel', (e) => {
       const distance = e.deltaY
       emitter.emit('CONTROLS:DOWN', distance)
@@ -57,6 +44,33 @@ export default class Controls {
     window.addEventListener('touchstart', this.onTouchDown.bind(this))
     window.addEventListener('touchmove', this.onTouchMove.bind(this))
     window.addEventListener('touchend', this.onTouchUp.bind(this))
+  }
+
+  keys() {
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        const distance = +1
+        emitter.emit('CONTROLS:DOWN', distance)
+      }
+      if (e.key === 'ArrowLeft') {
+        const distance = -1
+        emitter.emit('CONTROLS:DOWN', distance)
+      }
+
+      if (e.key === 'ArrowDown') {
+        const distance = +1
+        emitter.emit('CONTROLS:DOWN', distance)
+      }
+      if (e.key === 'ArrowUp') {
+        const distance = -1
+        emitter.emit('CONTROLS:DOWN', distance)
+      }
+
+      if (e.code === 'Space') {
+        const distance = +1
+        emitter.emit('CONTROLS:DOWN', distance)
+      }
+    })
   }
 
   onTouchDown(event) {
