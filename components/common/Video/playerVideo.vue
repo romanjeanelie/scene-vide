@@ -1,19 +1,18 @@
 <template>
   <div class="video__wrapper">
-    <video ref="video" src="@/assets/videos/Vivre-sa-vie.mp4" muted></video>
+    <video ref="video" src="@/assets/videos/Vivre-sa-vie.mp4" @timeupdate="updateDuration"></video>
     <div class="controls">
       <div class="top">
-        <div class="progress">
-          <span class="start">0:00</span>
-          <div class="progress__line">
+        <div class="progress" @click="changeDuration">
+          <p class="start">0:00</p>
+          <div ref="progressLine" class="progress__line">
             <div class="line line__back"></div>
-            <div class="line line__front__wrapper">
-              <div class="line__front"></div>
+            <div ref="lineDuration" class="line line__front">
               <span class="cursor"></span>
             </div>
           </div>
 
-          <span class="end">2:10</span>
+          <p class="end">2:10</p>
         </div>
       </div>
 
@@ -40,9 +39,13 @@
                 />
               </svg>
             </button>
-            <div class="sound__progress">
-              <span class="sound__cursor"></span>
-              <div class="sound__line"></div>
+            <div ref="soundProgressLine" class="sound__progress" @click="changeVolume">
+              <div class="sound__line">
+                <div class="line line__back"></div>
+                <div ref="lineVolume" class="line line__front">
+                  <span class="cursor"></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -87,11 +90,57 @@ export default {
     },
   },
 
+  data() {
+    return {
+      progressBounds: null,
+      volumeBounds: null,
+      videoDuration: null,
+    }
+  },
+
   mounted() {
-    console.log(this.$refs.video)
+    this.pageWidth = window.innerWidth
+    this.computeBounds()
     this.$refs.video.addEventListener('click', () => {
       this.$refs.video.play()
     })
+  },
+
+  methods: {
+    computeBounds() {
+      this.progressBounds = this.$refs.progressLine.getBoundingClientRect()
+      this.soundProgressBounds = this.$refs.soundProgressLine.getBoundingClientRect()
+    },
+    updateDuration() {
+      const currentTime = this.$refs.video.currentTime
+      this.videoDuration = this.$refs.video.duration
+      const valueOffsetLine = 100 - (currentTime / this.videoDuration) * 100
+
+      this.$refs.lineDuration.style.transform = `translateX(${-valueOffsetLine}%)`
+    },
+    changeDuration(e) {
+      const offsetX = e.clientX - this.progressBounds.x
+      const width = this.progressBounds.width
+
+      const ratioTime = offsetX / width
+      const newTime = this.videoDuration * ratioTime
+      const valueOffsetLine = 100 - ratioTime * 100
+
+      this.$refs.lineDuration.style.transform = `translateX(${-valueOffsetLine}%)`
+      this.$refs.video.currentTime = newTime
+    },
+
+    changeVolume(e) {
+      const offsetX = e.clientX - this.soundProgressBounds.x
+      const width = this.soundProgressBounds.width
+
+      const ratioVolume = offsetX / width
+      const newVolume = ratioVolume
+      const valueOffsetLine = 100 - ratioVolume * 100
+
+      this.$refs.lineVolume.style.transform = `translateX(${-valueOffsetLine}%)`
+      this.$refs.video.volume = newVolume
+    },
   },
 }
 </script>
@@ -99,6 +148,7 @@ export default {
 <style lang="scss">
 .video__wrapper {
   margin-top: vw(50);
+  overflow: hidden;
 
   display: flex;
   flex-direction: column;
@@ -106,10 +156,10 @@ export default {
   align-items: center;
   position: relative;
 
-  border: 1px solid $red;
+  /* border: 1px solid $red; */
   video {
     /* background: $yellow; */
-    border: 1px solid $red;
+    /* border: 1px solid $red; */
     /* background: $yellow; */
   }
 
@@ -123,54 +173,52 @@ export default {
     display: flex;
     flex-direction: column;
 
-    background: rgba($red, 0.5);
+    background: rgb(0, 0, 0);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 1) 0%, rgba(246, 246, 246, 0) 100%);
 
+    transform: translateY(0%);
+    transition: transform 600ms ease-in-out;
     .top {
       .progress {
         display: flex;
         align-items: center;
         width: 100%;
-        span {
+        p {
           font-size: vw(10);
-          line-height: 0;
+
+          transform: translateY(20%);
         }
         .progress__line {
           display: block;
           width: 100%;
-          height: 2px;
+          height: vw(10);
           margin: 0 vw(12);
           position: relative;
           display: flex;
+          align-items: center;
+          overflow: hidden;
 
           .line {
-            /* position: absolute;
+            position: absolute;
             left: 0;
-            top: 0;
+            top: 50%;
             width: 100%;
-            height: 100%; */
+            height: 2px;
             background: $white;
+            transform: translateY(-50%);
+
+            cursor: pointer;
             &.line__back {
-              position: absolute;
-              left: 0;
-              top: 0;
-              width: 100%;
-              height: 100%;
               opacity: 0.3;
             }
-            &.line__front__wrapper {
-              display: inline-block;
-              transform-origin: center left;
-              position: relative;
-              height: 2px;
-              .line__front {
-                transform: scaleX(0.5);
-                opacity: 1;
-              }
+            &.line__front {
+              transform: translateX(-20%); // Value to modify video
+              transition: transform 300ms linear;
               .cursor {
                 position: absolute;
                 right: 0;
                 top: 0;
-                width: vw(10);
+                width: 1px;
                 height: vw(10);
                 transform: translate3d(0, -50%, 0);
 
@@ -186,7 +234,7 @@ export default {
       display: flex;
       justify-content: space-between;
       align-items: end;
-      margin-top: vw(10);
+      margin-top: vw(16);
 
       .left {
         display: flex;
@@ -197,21 +245,53 @@ export default {
           margin-left: vw(30);
           display: flex;
           align-items: center;
-          .sound__cursor {
-            width: vw(10);
-            height: vw(10);
-            border-radius: 50%;
-            background: $white;
+          #btn__sound {
+            margin-right: vw(10);
           }
           .sound__progress {
-            width: vw(150);
-            height: 2px;
+            width: vw(120);
+            display: flex;
+            align-items: center;
+            transform: translateY(-10%);
+
             .sound__line {
               width: 100%;
-              height: 100%;
-              background: $white;
+              height: vw(10);
+              position: relative;
+              display: flex;
+              align-items: center;
 
-              margin-left: vw(10);
+              overflow: hidden;
+
+              .line {
+                position: absolute;
+                left: 0;
+                top: 50%;
+                width: 100%;
+                height: 2px;
+                background: $white;
+
+                cursor: pointer;
+                &.line__back {
+                  opacity: 0.3;
+                }
+                &.line__front {
+                  transform: translateX(-20%); // Value to modify sound
+                  transition: transform 300ms linear;
+
+                  .cursor {
+                    position: absolute;
+                    right: 0;
+                    top: 0;
+                    width: vw(10);
+                    height: vw(10);
+                    border-radius: 50%;
+                    transform: translate3d(0, -50%, 0);
+
+                    background: $white;
+                  }
+                }
+              }
             }
           }
         }

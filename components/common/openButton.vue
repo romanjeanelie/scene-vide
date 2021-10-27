@@ -17,7 +17,6 @@ export default {
   },
   methods: {
     reset() {
-      console.log('RESET')
       this.$gsap.set(this.$refs.openBtn.$el, {
         scaleX: 0,
       })
