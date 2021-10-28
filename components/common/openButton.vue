@@ -35,13 +35,13 @@ export default {
       this.resetAnim()
 
       this.$gsap.to(this.$refs.openBtn.$el, {
-        delay: 1,
+        delay: 0.5,
         scaleX: 1,
       })
 
       this.$gsap.to(this.$refs.openText, {
         opacity: 1,
-        delay: 1.5,
+        delay: 1,
         duration: 0.5,
       })
     },

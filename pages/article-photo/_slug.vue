@@ -25,11 +25,11 @@
           <div class="border"></div>
         </div>
       </section>
-
-      <main>
-        <player-video link-video="@/assets/videos/Vivre-sa-vie.mp4" />
-      </main>
     </div>
+
+    <main>
+      <slider :images="images" />
+    </main>
 
     <share />
 
@@ -42,18 +42,34 @@
 <script>
 import close from '~/components/common/close.vue'
 import navigation from '~/components/common/navigation.vue'
+import Slider from '~/components/common/Photo/slider.vue'
 import Share from '~/components/common/share.vue'
-import PlayerVideo from '~/components/common/Video/playerVideo.vue'
 
 import emitter from '~/utils/EventEmitter'
 
 export default {
-  components: { navigation, close, Share, PlayerVideo },
+  components: { navigation, close, Share, Slider },
+  data() {
+    return {
+      images: [
+        { url: 'https://picsum.photos/id/237/200/300' },
+        { url: 'https://picsum.photos/id/337/200/300' },
+        { url: 'https://picsum.photos/id/437/200/300' },
+        { url: 'https://picsum.photos/id/537/200/300' },
+        { url: 'https://picsum.photos/id/5637/200/300' },
+        { url: 'https://picsum.photos/id/637/200/300' },
+        { url: 'https://picsum.photos/id/737/200/300' },
+        { url: 'https://picsum.photos/id/837/200/300' },
+        { url: 'https://picsum.photos/id/937/200/300' },
+      ],
+    }
+  },
   mounted() {
     this.$nextTick(() => {
       emitter.emit('PAGE:MOUNTED')
     })
   },
+  methods: {},
 }
 </script>
 
@@ -119,9 +135,7 @@ export default {
   }
 
   main {
-    .video {
-      border: 1px solid red;
-    }
+    width: 99vw;
   }
 }
 </style>

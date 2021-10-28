@@ -50,11 +50,11 @@ export default {
 
       this.resetAnim()
 
-      this.$gsap.to(this.$refs.title, {
-        x: 0,
-        duration: 1.5,
-        ease: this.reducedMotion ? '' : 'power1.out',
-      })
+      // this.$gsap.to(this.$refs.title, {
+      //   x: 0,
+      //   duration: 1.5,
+      //   ease: this.reducedMotion ? '' : 'power1.out',
+      // })
 
       this.$gsap.to(this.$refs.line, {
         scaleX: 1,
@@ -63,17 +63,16 @@ export default {
         ease: this.reducedMotion ? '' : 'expo.out',
       })
 
-      this.$gsap.to(this.$refs.auteur, {
-        x: 0,
-        opacity: 1,
-        duration: duration1,
-        ease: this.reducedMotion ? '' : 'expo.out',
-      })
+      // this.$gsap.to(this.$refs.auteur, {
+      //   x: 0,
+      //   opacity: 1,
+      //   duration: duration1,
+      //   ease: this.reducedMotion ? '' : 'expo.out',
+      // })
 
       this.$gsap.to(this.resumeSplitted.lines, {
         x: 0,
         // opacity: 1,
-
         duration: 1,
         stagger: 0.05,
         ease: this.reducedMotion ? '' : 'power1.out',
@@ -84,19 +83,19 @@ export default {
     animOut() {
       this.resetAnim()
 
-      this.$gsap.to(this.$refs.title, {
-        x: '50%',
-        duration: 1.5,
-        ease: 'power1.out',
-      })
+      // this.$gsap.to(this.$refs.title, {
+      //   x: '50%',
+      //   duration: 1.5,
+      //   ease: 'power1.out',
+      // })
 
       this.$gsap.to(this.$refs.line, {
         scaleX: 0,
       })
 
-      this.$gsap.to(this.$refs.auteur, {
-        x: '-100%',
-      })
+      // this.$gsap.to(this.$refs.auteur, {
+      //   x: '-100%',
+      // })
 
       this.$gsap.to(this.resumeSplitted.lines, {
         x: '20%',
@@ -107,48 +106,47 @@ export default {
 
     resetAnim() {
       this.$gsap.killTweensOf([
-        this.titleSplitted2.chars,
-        this.titleSplitted.lines,
+        // this.titleSplitted2.chars,
+        // this.titleSplitted.lines,
         this.$refs.line,
-        this.$refs.auteur,
-        this.auteurSplitted.chars,
+        // this.$refs.auteur,
+        // this.auteurSplitted.chars,
         this.resumeSplitted.lines,
       ])
-      console.log('reset anim article')
     },
 
     reset() {
-      this.titleSplitted = new this.$SplitText(this.$refs.title, {
-        type: 'lines, chars',
-        linesClass: 'lines',
-        charsClass: 'chars1',
-      })
+      // this.titleSplitted = new this.$SplitText(this.$refs.title, {
+      //   type: 'lines, chars',
+      //   linesClass: 'lines',
+      //   charsClass: 'chars1',
+      // })
 
-      this.titleSplitted2 = new this.$SplitText(this.titleSplitted.chars, {
-        type: 'chars',
-        charsClass: 'chars2',
-      })
+      // this.titleSplitted2 = new this.$SplitText(this.titleSplitted.chars, {
+      //   type: 'chars',
+      //   charsClass: 'chars2',
+      // })
 
-      this.auteurSplitted = new this.$SplitText(this.$refs.auteur, {
-        type: 'chars',
-        charsClass: 'chars',
-      })
+      // this.auteurSplitted = new this.$SplitText(this.$refs.auteur, {
+      //   type: 'chars',
+      //   charsClass: 'chars',
+      // })
       this.resumeSplitted = new this.$SplitText(this.$refs.resume, {
         type: 'lines',
         linesClass: 'lines',
       })
 
-      this.$gsap.set(this.$refs.title, {
-        x: '50%',
-      })
+      // this.$gsap.set(this.$refs.title, {
+      //   x: '50%',
+      // })
 
       this.$gsap.set(this.$refs.line, {
         scaleX: 0,
       })
 
-      this.$gsap.set(this.$refs.auteur, {
-        x: '-100%',
-      })
+      // this.$gsap.set(this.$refs.auteur, {
+      //   x: '-100%',
+      // })
 
       this.$gsap.set(this.resumeSplitted.lines, {
         x: '20%',
@@ -175,6 +173,7 @@ export default {
 
   .top {
     padding: $sizeProgress vw(16);
+    margin-left: vw(40);
     display: flex;
     flex-direction: column;
     .article__title__wrapper {

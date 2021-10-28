@@ -2,6 +2,9 @@
   <nav ref="nav" class="navigation">
     <div class="wrapper">
       <nuxt-link to="/" class="title">La scene est vide</nuxt-link>
+
+      <p class="article-title">{{ title }} - {{ author }}</p>
+
       <button class="burger">
         <span class="line"></span>
         <span class="line"></span>
@@ -15,9 +18,13 @@
 <script>
 export default {
   props: {
-    theme: {
+    title: {
       type: String,
-      default: 'light',
+      default: 'TITRE',
+    },
+    author: {
+      type: String,
+      default: 'AUTEUR',
     },
   },
 
@@ -33,27 +40,6 @@ export default {
         y: '-100%',
       })
     },
-    /**
-     * Animations
-     */
-
-    // animIn() {
-    //   this.resetAnim()
-    //   this.$gsap.to(this.$refs.nav, {
-    //     y: 0,
-    //   })
-    // },
-    // animOut() {
-    //   console.log('nav anim out')
-    //   this.resetAnim()
-    //   this.$gsap.to(this.$refs.nav, {
-    //     y: '-100%',
-    //   })
-    // },
-
-    // resetAnim() {
-    //   this.$gsap.killTweensOf(this.$refs.nav)
-    // },
   },
 }
 </script>
@@ -63,6 +49,7 @@ export default {
   position: fixed;
   top: 0;
   width: 100%;
+  z-index: 1;
 
   background: $white;
   color: black;

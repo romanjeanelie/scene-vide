@@ -31,6 +31,7 @@ export default {
     clubPlugins: {
       splitText: true,
       morphSVG: true,
+      drawSVG: true,
     },
     extraPlugins: {
       scrollTrigger: true,
